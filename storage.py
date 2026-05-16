@@ -9,6 +9,11 @@ class _BaseHandler:
         # Base Storage Handler
         pass
 
+    def get(self, key, default=None): ...
+    def set(self, key, value): ...
+    def remove(self, key): ...
+
+
 class _DesktopHandler(_BaseHandler):
     def __init__(self):
         # Desktop Storage Handler
@@ -47,9 +52,6 @@ class _DesktopHandler(_BaseHandler):
     def remove(self, key):
         del self._data[key]
 
-
-        
-
 class _WASMHandler(_BaseHandler):
     pass
 
@@ -65,17 +67,32 @@ class Storage:
                 # WASM: use LocalStorage
                 self.base = _WASMHandler()
 
-    def set(key: str, value: str | int | list | dict):
-        pass
+    def set(self, key: str, value: str | int | list | dict):
+        self.base.set(key, value)
 
-    def get(key: str):
-        pass
+    def get(self, key: str):
+        return self.base.get(key)
 
-    def remove(key: str):
-        pass
+    def remove(self, key: str):
+        self.base.remove(key)
 
     def cloudWrite(credentials):
         pass
 
     def cloudRestore(credentials):
         pass
+
+
+class AssetManager:
+    _inventory: dict = {}
+
+    def __init__(self, inventory: dict):
+        for key in inventory.keys():
+            value = inventory[key]
+            if pl.Path(f"assets/{value}").exists():
+                self._inventory.update({key: pl.Path(value)})
+            else:
+                raise Exception("Missing asset '%s' at '%s'".format(key, pl.Path("assets/%s".format(value)).absolute()))
+
+    def get(self, asset_key: str):
+        return pl.Path(f"assets/{self._inventory.get(asset_key)}")

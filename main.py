@@ -5,16 +5,14 @@ import pathlib as pl
 import json
 import queue
 import csv
+import pytiled_parser as tiled
 import math
 from storage import Storage, AssetManager
 #from auth import Auth
 
 class Game:
     MAP = None
-    PLAYER = {
-        "pos": (None, None),
-        "sprite": None
-    }
+    PLAYER = None 
     OBJECTIVE = {}
     STORY = 0
     DECISIONS = []
@@ -37,56 +35,80 @@ class Game:
 
 # Tilemaps
 class TileSprite:
-    def __init__(self, tileset: pg.Surface, id: int):
+    def __init__(self, tileset: tiled.Tileset, tilesheet: pg.Surface, id: int):
         self.surface = pg.Surface((32, 32))
-        if id != -1:
+        if id != 0:
             self.surface.blit(tileset, -1 * pg.Vector2(32 * int(id), 0))
 
-class Tilemap:
-    def __init__(self, path: pl.Path, tileset: pg.Surface):
-        self.map = []
-        self.tileset = tileset
-        with path.open("r") as f:
-            self.csv = csv.reader(f.readlines())
-
-        size = [0, 0]
-        for row in self.csv:
-            size[1] += 1
-            size[0] = 0
-            r = []
-            for tile in row:
-                size[0] += 1
-                r.append(TileSprite(self.tileset, tile))
-            self.map.append(r)
-
-        self.w = size[0] * 32
-        self.h = size[1] * 32
-    
-    def draw(self, screen: pg.Surface):
-        c = pg.Vector2((32, 0))
-        r = pg.Vector2((0, 32))
-        current_r = pg.Vector2((0, 0))
-        map_surface = pg.Surface((self.w, self.h))
-        for row in self.map:
-            current_c = pg.Vector2((0, 0))
-            for col in row:
-                map_surface.blit(col.surface, current_r + current_c)
-                current_c += c
-            current_r += r
+class Player:
+    pos = (None, None)
+    frame_count: int = 0
+    animation_count: int = 0
+    speed: int = 8
+    current_movement_vector: pg.Vector2 = pg.Vector2(0,0)
 
 
-        print("screen:", (screen.get_width(), screen.get_height()), "map(w):", (pg.transform.scale_by(map_surface, screen.get_width() / self.w).get_width(), pg.transform.scale_by(map_surface, screen.get_width() / self.w).get_height()))
-        if pg.transform.scale_by(map_surface, screen.get_width() / self.w).get_height() > screen.get_height():
-            # scale to height
-            print("h")
-            screen.blit(pg.transform.scale_by(map_surface, screen.get_height() / self.h), pg.Vector2(0, 0))
-            return
-        print("w")
-        screen.blit(pg.transform.scale_by(map_surface, screen.get_width() / self.w).get_height(), pg.Vector2(0, 0))
+    # animations: 6 frames per second
+    # frames:
+    # 0-11 (12 frames, 2 seconds) idle
+    # 12-23 (12 frames, 2 seconds) moving
+
+    def __init__(self, animation_sheet: pg.Surface):
+        self.sheet = animation_sheet
+        self.cache = {}
+    def reset(self):
+        self.frame_count = self.animation_count = 0
+
+    def tick(self):
+        self.frame_count += 1
+        if self.frame_count % 10 == 0:
+            self.animation_count += 1
+        elif self.frame_count > 60:
+            self.frame_count = 0
+            self.animation_count = 0
+
+    def render(self, screen_width):
+        if self.current_movement_vector != pg.Vector2(0, 0): frame_id = self.animation_count + 12
+        else: frame_id = self.animation_count
+
+        # attempt to get frame from cache
+        if self.cache.get(frame_id, False):
+            return self.cache.get(frame_id)
+        
+        s = pg.Surface((32, 32))
+        s.blit(self.sheet, -1 * pg.Vector2(32 * int(frame_id), 0))
+        self.tick()
+        s = pg.transform.scale_by(s, (screen_width * 0.05) / 32)
+        self.cache.update({frame_id: s})
+        return s
+        
+def TileSurfaceFromTileSet(tileset: tiled.Tileset, id: int):
+    tilesheet = pg.image.load(tileset.image).convert()
+    tile = pg.Surface((tileset.tile_width, tileset.tile_width))
+    if id != -1:
+        tile.blit(tilesheet, -1 * pg.Vector2(tileset.tile_width * (int(id) - 1), 0))
+    return tile
+
+
+def render_tilemap(tilemap):
+    c = pg.Vector2((32, 0))
+    r = pg.Vector2((0, 32))
+    current_r = pg.Vector2((0, 0))
+    map_surface = pg.Surface(32 * pg.Vector2(tilemap.map_size))
+
+    for row in tilemap.layers[0].data:
+        current_c = pg.Vector2((0, 0))
+        for col in row:
+            tile = TileSurfaceFromTileSet(tilemap.tilesets[1], col)
+            map_surface.blit(tile, current_r + current_c)
+            current_c += c
+        current_r += r
+
+
+    return map_surface
 
 class App:
     FPS: int = 60
-    #SCREEN: pg.Surface = pg.display.set_mode((1600, 900), pg.RESIZABLE)
     DISPLAY: pg.Surface = pg.display.set_mode((1600, 900), pg.RESIZABLE)
     DISPLAY_RATIO: tuple = (16 / 9, 9 / 16)
     SCREEN: pg.Surface = pg.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
@@ -187,7 +209,7 @@ class App:
         right_sect1_button = pg.Surface((2 * ((right_domain[1] - right_domain[0] )/ 3), 2 * ((right_sect1_range[1] - right_sect1_range[0]) / 3)))
         right_sect1_button.fill(AC_COLOUR)
         right_sect1_button_font = pg.font.SysFont(name=pg.font.get_default_font(), size=int(2 * ((right_sect1_button.get_height()) / 3)))
-        right_sect1_button_text = right_sect1_button_font.render('Play', True, TXT_COLOUR)
+        right_sect1_button_text = right_sect1_button_font.render('Play', True, TXT_COLOUR)  
         right_sect1_button.blit(right_sect1_button_text, ((right_sect1_button.get_width() - right_sect1_button_text.get_width()) / 2, (right_sect1_button.get_height() - right_sect1_button_text.get_height()) / 2))
         right_sect1_button_vector = pg.Vector2(((right_domain[1] - right_domain[0]) / 3) / 2, ((right_sect1_range[1] - right_sect1_range[0]) / 3) / 2)
         right_sect1_button_endvector = pg.Vector2(right_sect1_button.get_width(), right_sect1_button.get_height())
@@ -296,12 +318,59 @@ class App:
             await self.tick()
 
     async def STATE_ingame(self):
-        tilemap = Tilemap(pl.Path("maps/main.csv"), pg.image.load(self.ASSETS.get("tilemap_main").open("r")))
+        tilemap = tiled.parse_map(self.ASSETS.get("main_tilemap_tmj"))
+        player = Player(pg.image.load(self.ASSETS.get("player_spritesheet_image").open("r")).convert())
+        map_surface = pg.transform.scale_by(render_tilemap(tilemap), (self.SCREEN.get_width() * 0.05) / 32)
         while True:
             self.SCREEN.fill((0, 0, 0))
-            tilemap.draw(self.SCREEN)
+            player_surface = player.render(self.SCREEN.get_width())
 
-            await self.BASIC_EVENT_HANDLE()
+            if player.pos == (None, None):
+                #place player at spawn
+                for object in tilemap.layers[1].tiled_objects:
+                    if object.class_ == "spawn":
+                        # spawn point
+                        player.pos = pg.Vector2(object.coordinates)
+                        break
+
+            #t.blit(player_surface, player.pos - pg.Vector2(32/2, 32/2))
+            self.SCREEN.blit(map_surface, pg.Vector2(self.SCREEN.get_width() / 2, self.SCREEN.get_height() / 2) - player.pos * ((self.SCREEN.get_width() * 0.05) / 32))
+            self.SCREEN.blit(player_surface, pg.Vector2(self.SCREEN.get_width() / 2, self.SCREEN.get_height() / 2) - pg.Vector2(player_surface.get_width() / 2, player_surface.get_height() / 2))
+
+
+            # events
+            for event in pg.event.get():
+                match event.type:
+                    case pg.QUIT:
+                        await self.STATE_QUIT()
+                    case pg.VIDEORESIZE:
+                        await self.window_resize(event.size)
+                        # rescale the map
+                        map_surface = pg.transform.scale_by(render_tilemap(tilemap), (self.SCREEN.get_width() * 0.05) / 32)
+                        player.cache = {}
+                    case pg.KEYDOWN:
+                        # keydown
+                        match event.key:
+                            case pg.K_w | pg.K_UP:
+                                player.current_movement_vector += pg.Vector2(0, -player.speed)
+                            case pg.K_s | pg.K_DOWN:
+                                player.current_movement_vector += pg.Vector2(0, player.speed)
+                            case pg.K_a | pg.K_LEFT:
+                                player.current_movement_vector += pg.Vector2(-player.speed, 0)
+                            case pg.K_d | pg.K_RIGHT:
+                                player.current_movement_vector += pg.Vector2(player.speed, 0)
+                    case pg.KEYUP:
+                        # keyup
+                        match event.key:
+                            case pg.K_w | pg.K_UP:
+                                player.current_movement_vector -= pg.Vector2(0, -player.speed)
+                            case pg.K_s | pg.K_DOWN:
+                                player.current_movement_vector -= pg.Vector2(0, player.speed)
+                            case pg.K_a | pg.K_LEFT:
+                                player.current_movement_vector -= pg.Vector2(-player.speed, 0)
+                            case pg.K_d | pg.K_RIGHT:
+                                player.current_movement_vector -= pg.Vector2(player.speed, 0)
+            player.pos += player.current_movement_vector
             await self.tick()
 
         self.NEXT.put(self.STATE_blank)

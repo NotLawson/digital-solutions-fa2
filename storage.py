@@ -96,3 +96,6 @@ class AssetManager:
 
     def get(self, asset_key: str):
         return pl.Path(f"assets/{self._inventory.get(asset_key)}")
+
+    def get_path(self, path: str):
+        return pl.Path(f"assets/{path}")

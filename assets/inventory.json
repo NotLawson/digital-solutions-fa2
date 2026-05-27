@@ -1,3 +1,6 @@
 {
-    "tilemap_main": "tilemap.png"
+    "main_spritesheet_image": "main_tilemap_spritesheet.png",
+    "main_spritesheet_tsj": "main_tilemap_spritesheet.tsj",
+    "main_tilemap_tmj":"main_tilemap.tmj",
+    "player_spritesheet_image": "player_spritesheet.png"
 }

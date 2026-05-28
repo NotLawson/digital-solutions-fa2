@@ -49,14 +49,14 @@
                 {
                  "height":0,
                  "id":1,
-                 "name":"Map Spawn Point",
+                 "name":"Classroom Spawn Point",
                  "opacity":1,
                  "rotation":0,
                  "type":"spawn",
                  "visible":true,
                  "width":0,
-                 "x":56,
-                 "y":286
+                 "x":96,
+                 "y":224
                 }, 
                 {
                  "height":192,
@@ -79,7 +79,7 @@
                 {
                  "height":0,
                  "id":5,
-                 "name":"Example Entity",
+                 "name":"Maths Assistant",
                  "opacity":1,
                  "point":true,
                  "properties":[
@@ -97,8 +97,8 @@
                  "type":"entity",
                  "visible":true,
                  "width":0,
-                 "x":348,
-                 "y":220
+                 "x":640,
+                 "y":192
                 }],
          "opacity":1,
          "type":"objectgroup",

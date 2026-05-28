@@ -49,14 +49,14 @@
                 {
                  "height":0,
                  "id":1,
-                 "name":"Map Spawn Point",
+                 "name":"Office Spawn Point",
                  "opacity":1,
                  "rotation":0,
                  "type":"spawn",
                  "visible":true,
                  "width":0,
-                 "x":56,
-                 "y":286
+                 "x":72,
+                 "y":280
                 }, 
                 {
                  "height":192,
@@ -79,7 +79,7 @@
                 {
                  "height":0,
                  "id":5,
-                 "name":"Example Entity",
+                 "name":"Rules Checker",
                  "opacity":1,
                  "point":true,
                  "properties":[
@@ -97,8 +97,8 @@
                  "type":"entity",
                  "visible":true,
                  "width":0,
-                 "x":348,
-                 "y":220
+                 "x":304,
+                 "y":256
                 }],
          "opacity":1,
          "type":"objectgroup",

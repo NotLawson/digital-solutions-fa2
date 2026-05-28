@@ -1,11 +1,11 @@
-{ "columns":3,
+{ "columns":4,
  "image":"main_tilemap_spritesheet.png",
  "imageheight":32,
- "imagewidth":96,
+ "imagewidth":128,
  "margin":0,
  "name":"Main Tilemap Spritesheets",
  "spacing":0,
- "tilecount":3,
+ "tilecount":4,
  "tiledversion":"1.12.1",
  "tileheight":32,
  "tiles":[
@@ -38,6 +38,16 @@
                  "value":true
                 }],
          "type":"water"
+        }, 
+        {
+         "id":3,
+         "properties":[
+                {
+                 "name":"collision",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"border"
         }],
  "tilewidth":32,
  "type":"tileset",

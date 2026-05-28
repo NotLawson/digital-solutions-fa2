@@ -1,0 +1,24 @@
+Level 1:
+- Character: Sgt Better Pritton
+- Setting: School Reception
+- Objective: Get to know controls of the game, etc. Interact with 5 different entities to complete the level. Will always pass a positive decision
+
+Level 2:
+- Character: Fyumi Pernando
+- Setting: Maths Classroom
+- Objective: Answer 5 different multiple choice maths questions by interacting with the entity relating to the answer (e.g. A, B, C, D). decision will be 1-5 based on score
+
+Level 3:
+- Character: Trikkie Nimboli
+- Setting: Cluttered Classroom
+- Objective: Interact with desk entities in a specific pattern to clear the room. The decision is 1-10 based on time spent.
+
+Level 4:
+- Character: Ram Seid
+- Setting: Teacher's office
+- Objective: Complete a 5 question quiz on the rules of the school. The decision is 1-5 based on the score
+
+Level 5:
+- Character: Principal Fincoln Lorbes
+- Setting: Principal's office
+- Objective: Principal reviews your decision and gives you a pass or fail mark.

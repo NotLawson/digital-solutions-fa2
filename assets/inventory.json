@@ -2,5 +2,11 @@
     "main_spritesheet_image": "main_tilemap_spritesheet.png",
     "main_spritesheet_tsj": "main_tilemap_spritesheet.tsj",
     "main_tilemap_tmj":"main_tilemap.tmj",
-    "player_spritesheet_image": "player_spritesheet.png"
+    "level1_tilemap_tmj":"level1_tilemap.tmj",
+    "level2_tilemap_tmj":"level2_tilemap.tmj",
+    "level3_tilemap_tmj":"level3_tilemap.tmj",
+    "level4_tilemap_tmj":"level4_tilemap.tmj",
+    "level5_tilemap_tmj":"level5_tilemap.tmj",
+    "player_spritesheet_image": "player_spritesheet.png",
+    "example_entity_icon": "forbes.jpg"
 }

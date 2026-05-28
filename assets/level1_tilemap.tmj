@@ -49,14 +49,14 @@
                 {
                  "height":0,
                  "id":1,
-                 "name":"Map Spawn Point",
+                 "name":"Reception Spawn Point",
                  "opacity":1,
                  "rotation":0,
                  "type":"spawn",
                  "visible":true,
                  "width":0,
-                 "x":56,
-                 "y":286
+                 "x":72,
+                 "y":304
                 }, 
                 {
                  "height":192,
@@ -79,7 +79,7 @@
                 {
                  "height":0,
                  "id":5,
-                 "name":"Example Entity",
+                 "name":"Reception Guide",
                  "opacity":1,
                  "point":true,
                  "properties":[
@@ -97,7 +97,7 @@
                  "type":"entity",
                  "visible":true,
                  "width":0,
-                 "x":348,
+                 "x":416,
                  "y":220
                 }],
          "opacity":1,

@@ -1,18 +1,15 @@
-## Story
-import csv
-import pathlib
-
 class Scene:
+    # Scene placeholder for narrative scenes
     pass
 
 class Objective:
+    # Tracks objectives, goals, and progress
     title: str = "Objective Title"
     description: str = "Objective Description"
     goals: list = [
         {
             "slug":"slug",
             "friendly": "Friendly Name",
-            "stages": "1/1",
             "events": [
                 {
                     "type": "interaction",
@@ -35,6 +32,13 @@ class Objective:
                 },
                 {
                     "type": "storyProgression"
+                },
+                {
+                    "type": "scene",
+                    "icon":"icon_key",
+                    "name":"scene name",
+                    "content":"content"
+
                 }
             ]
         }
@@ -44,30 +48,21 @@ class Objective:
         self.title, self.description, self.goals = title, description, []
     
     def reset(self):
+        # Reset goal completion and event states
         for goal in self.goals:
             goal["complete"] = False
+            goal["event_states"] = [False for _ in goal.get("events", [])]
 
-    def add_goal(self, slug: str, friendly: str, stages: str, events: list | None = None, rewards: list | None = None):
+    def add_goal(self, slug: str, friendly: str, events: list | None = None, rewards: list | None = None):
         self.goals.append({
             "slug": slug,
             "friendly": friendly,
-            "stages": stages,
             "events": events or [],
             "rewards": rewards or [],
-            "complete": False
+            "complete": False,
+            "event_states": [False for _ in (events or [])]
         })
-    
-    def add_goal_events(self, goalslug: str, type: str, **kwargs):
-        for goal in self.goals:
-            if goal["slug"] == goalslug:
-                goal["events"].append({"type": type, **kwargs})
-                break
 
-    def add_goal_rewards(self, goalslug: str, type: str, **kwargs):
-        for goal in self.goals:
-            if goal["slug"] == goalslug:
-                goal["rewards"].append({"type": type, **kwargs})
-                break
 
     def complete_goal(self, goalslug: str):
         for goal in self.goals:
@@ -76,6 +71,7 @@ class Objective:
                 break
 
     def _event_matches_goal_event(self, goal_event: dict, event_type: str, payload: dict):
+        # Check whether an event payload matches a goal event
         if goal_event.get("type") != event_type:
             return False
 
@@ -88,25 +84,60 @@ class Objective:
         return True
 
     def handle_event(self, event_type: str, **payload):
+        # Handle an incoming event and update goals
         completed_goals = []
 
+        current_goal = None
         for goal in self.goals:
-            if goal.get("complete"):
-                continue
+            if not goal.get("complete"):
+                current_goal = goal
+                break
 
-            for goal_event in goal.get("events", []):
-                if self._event_matches_goal_event(goal_event, event_type, payload):
-                    goal["complete"] = True
-                    completed_goals.append(goal["slug"])
-                    break
+        if current_goal is None:
+            return completed_goals
+
+        event_states = current_goal.setdefault("event_states", [False for _ in current_goal.get("events", [])])
+        for index, goal_event in enumerate(current_goal.get("events", [])):
+            if event_states[index]:
+                continue
+            if self._event_matches_goal_event(goal_event, event_type, payload):
+                event_states[index] = True
+                break
+
+        if current_goal.get("events") and all(event_states):
+            current_goal["complete"] = True
+            completed_goals.append(current_goal["slug"])
 
         return completed_goals
 
     def is_complete(self):
+        # Return True if all goals are complete
         return all(goal.get("complete", False) for goal in self.goals)
+
+    def get_progress(self):
+        total_events = 0
+        completed_events = 0
+
+        for goal in self.goals:
+            events = goal.get("events", [])
+            event_states = goal.setdefault("event_states", [False for _ in events])
+            total_events += len(events)
+            completed_events += sum(1 for state in event_states if state)
+
+        if total_events == 0:
+            return 0.0
+
+        return completed_events / total_events
+
+    def get_current_goal(self):
+        for goal in self.goals:
+            if not goal.get("complete"):
+                return goal
+        return None
 
 
 class InteractionMap:
+    # Stores entity interaction definitions and progress
     _data: dict = {
         "interactionEntityId":{
             "name": "Example Interaction Entity",
@@ -118,6 +149,7 @@ class InteractionMap:
     }
 
     def __init__(self):
+        # Initialize runtime interaction data and progress
         self._data = {}
         self._progress = {}
     
@@ -148,6 +180,7 @@ class InteractionMap:
         else:
             response_text = interaction.get("exhaustedInteractionResponse", "")
 
+        # Return a copy of the interaction with the selected response
         return {**interaction, "response": response_text}
     
 
@@ -160,81 +193,104 @@ MAPS = {
     "level_5": "level5_tilemap_tmj",
 }
 
-
-def _build_stage(stage: int, slug: str, title: str, description: str, tilemap_key: str, entity_name: str, objective_slug: str):
-    interaction_map = InteractionMap()
-    interaction_map.add_entity_interaction(
-        "example",
-        entity_name,
-        "example_entity_icon",
-        [
-            f"{entity_name}: keep going.",
-            f"{entity_name}: you are doing fine.",
-            f"{entity_name}: almost there.",
-        ],
-        False,
-        f"{entity_name}: come back after you finish this stage."
-    )
-
-    objective = Objective(title, description)
-    objective.add_goal(objective_slug, title, "1/1")
-    objective.add_goal_events(objective_slug, "interaction", entityId="example")
-    objective.add_goal_rewards(objective_slug, "storyProgression")
-
-    return {
-        "stage": stage,
-        "slug": slug,
-        "interactionMap": interaction_map,
-        "tilemap": MAPS[tilemap_key],
-        "spawn": None,
-        "objective": objective,
+def build_example_level():
+    # Example level structure (unused helper)
+    {
+        "stage": 0, # stage id
+        "slug": "example", # stage slug
+        "interactionMap": InteractionMap(), # interaction map,
+        "tilemap": None, # tilemap
+        "objective": Objective("objective", "description") # objective
     }
+
+# Level 1: Reception w/ Sgt Pritton
+def build_level_1():
+    # Build level 1: reception and basic goals
+    obj = Objective("Welcome to MWBI!", "Get to know your controls.")
+    obj.add_goal("interact",
+                 "Interact with Sgt. Pritton by walking over to him and pressing [return].",
+                 [{
+                    "type": "interaction",
+                    "entityId": "pritton"
+                 }])
+    obj.add_goal("meetstudents",
+                 "Get to know 5 other students.",
+                 [
+                 {
+                     "type": "interaction",
+                     "entityId": "student1"
+                 },
+                 {
+                     "type": "interaction",
+                     "entityId": "student2"
+                 },
+                 {
+                     "type": "interaction",
+                     "entityId": "student3"
+                 },
+                 {
+                     "type": "interaction",
+                     "entityId": "student4"
+                 },
+                 {
+                     "type": "interaction",
+                     "entityId": "student5"
+                 },
+                 ])
+    obj.add_goal("finish", "Go back and talk to Sgt. Pritton",
+                 [{
+                     "type": "interaction",
+                     "entityId": "pritton"
+                 }],
+                 [{
+                    "type": "scene",
+                    "icon": "pritton_icon",
+                    "name": "Sgt. Pritton",
+                    "content": "Well done on talking to the other students. It's time for your next class!"
+                 },
+                 {"type": "storyProgression"}])
+    tm = MAPS["level_1"]
+    im = InteractionMap()
+    im.add_entity_interaction("pritton", "Sgt. Pritton", "pritton_icon", ["Welcome to MWBI!", "At this school, we very strict standards.", "But for now, you should go and meet some of your peers."], False, "Follow the instructions in the top right corner of the screen to continue.")
+    im.add_entity_interaction("student1", "Student", "student_icon", ["Hey, I'm just getting settled in.", "I think the classrooms are over there."], False, "I'm focused on class right now.")
+    im.add_entity_interaction("student2", "Student", "student_icon", ["The school feels a lot bigger than I expected.", "Maybe the teacher can point you in the right direction."], False, "I should get back to my desk.")
+    im.add_entity_interaction("student3", "Student", "student_icon", ["I'm trying to remember where everything is.", "A lot of people are still finding their way around."], False, "Sorry, I need to keep moving.")
+    im.add_entity_interaction("student4", "Student", "student_icon", ["Have you met Sgt. Pritton yet?", "He seems to know everything about this place."], False, "I have to finish getting ready for class.")
+    im.add_entity_interaction("student5", "Student", "student_icon", ["I heard the first lesson is all about the basics.", "That should make it easier to settle in."], False, "Maybe talk to the teacher first.")
+    return {
+        "stage": 1, # stage id
+        "slug": "level1", # stage slug
+        "interactionMap": im, # interaction map,
+        "tilemap": tm, # tilemap
+        "objective": obj # objective
+    }
+
+# Level 2: Maths Classroom w/ Ms Pernando
+def build_level_2():
+    # Level 2 not yet implemented
+    pass
+
+# Level 3: Cluttered Classroom w/ Ms Nimboli
+def build_level_3():
+    # Level 3 not yet implemented
+    pass
+
+# Level 4: Office w/ Mr Seid
+def build_level_4():
+    # Level 4 not yet implemented
+    pass
+
+# Level 5: Pricipal's Office w/ Pricipal Lorbes
+def build_level_5():
+    # Level 5 not yet implemented
+    pass
 
 
 STORY = [
-    _build_stage(
-        0,
-        "school-reception",
-        "Meet Sgt Better Pritton",
-        "Learn the controls and speak to five entities to clear the reception.",
-        "level_1",
-        "Sgt Better Pritton",
-        "learn_controls",
-    ),
-    _build_stage(
-        1,
-        "maths-classroom",
-        "Meet Fyumi Pernando",
-        "Answer five multiple-choice maths questions by choosing the correct response.",
-        "level_2",
-        "Fyumi Pernando",
-        "maths_quiz",
-    ),
-    _build_stage(
-        2,
-        "cluttered-classroom",
-        "Meet Trikkie Nimboli",
-        "Interact with the room in the required pattern to clear the cluttered classroom.",
-        "level_3",
-        "Trikkie Nimboli",
-        "classroom_cleanup",
-    ),
-    _build_stage(
-        3,
-        "teachers-office",
-        "Meet Ram Seid",
-        "Complete the school rules quiz and earn a passing decision.",
-        "level_4",
-        "Ram Seid",
-        "school_rules_quiz",
-    ),
-    _build_stage(
-        4,
-        "principals-office",
-        "Meet Principal Fincoln Lorbes",
-        "Present your result to the principal and finish the final review.",
-        "level_5",
-        "Principal Fincoln Lorbes",
-        "final_review",
-    ),
+    {},
+    build_level_1(),
+    #build_level_2(),
+    #build_level_3(),
+    #build_level_4(),
+    #build_level_5()
 ]

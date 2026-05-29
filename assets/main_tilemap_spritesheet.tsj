@@ -1,11 +1,11 @@
-{ "columns":4,
+{ "columns":6,
  "image":"main_tilemap_spritesheet.png",
  "imageheight":32,
- "imagewidth":128,
+ "imagewidth":192,
  "margin":0,
  "name":"Main Tilemap Spritesheets",
  "spacing":0,
- "tilecount":4,
+ "tilecount":6,
  "tiledversion":"1.12.1",
  "tileheight":32,
  "tiles":[
@@ -48,6 +48,26 @@
                  "value":true
                 }],
          "type":"border"
+        }, 
+        {
+         "id":4,
+         "properties":[
+                {
+                 "name":"collision",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"wall"
+        }, 
+        {
+         "id":5,
+         "properties":[
+                {
+                 "name":"collision",
+                 "type":"bool",
+                 "value":false
+                }],
+         "type":"floor"
         }],
  "tilewidth":32,
  "type":"tileset",

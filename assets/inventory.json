@@ -8,5 +8,9 @@
     "level4_tilemap_tmj":"level4_tilemap.tmj",
     "level5_tilemap_tmj":"level5_tilemap.tmj",
     "player_spritesheet_image": "player_spritesheet.png",
-    "example_entity_icon": "forbes.jpg"
+    "example_entity_icon": "forbes.jpg",
+    "pritton_icon": "pritton.jpg",
+    "pritton_spritesheet": "pritton_spritesheet.jpg",
+    "student_icon": "student.jpg",
+    "student_spritesheet": "student_spritesheet.jpg"
 }

@@ -1,10 +1,12 @@
 # Custom key/value storage libary for cross-platform compatibility
+# Provides a simple cross-platform storage API
 import platform
 import pathlib as pl
 import json
 import sys, os
 
 class _BaseHandler:
+    # Base handler interface for storage implementations
     def __init__(self):
         # Base Storage Handler
         pass
@@ -15,6 +17,7 @@ class _BaseHandler:
 
 
 class _DesktopHandler(_BaseHandler):
+    # Desktop file-based save handler
     def __init__(self):
         # Desktop Storage Handler
         _path: pl.Path
@@ -53,10 +56,11 @@ class _DesktopHandler(_BaseHandler):
         del self._data[key]
 
 class _WASMHandler(_BaseHandler):
+    # WebAssembly / browser storage handler (placeholder)
     pass
 
 class Storage:
-    # Storage handler for cross-platform construction
+    # Platform-aware storage wrapper
     base: _BaseHandler
     def __init__(self):
         match platform.system():
@@ -84,6 +88,7 @@ class Storage:
 
 
 class AssetManager:
+    # Simple asset path manager for game assets
     _inventory: dict = {}
 
     def __init__(self, inventory: dict):
@@ -95,6 +100,7 @@ class AssetManager:
                 raise Exception("Missing asset '%s' at '%s'".format(key, pl.Path("assets/%s".format(value)).absolute()))
 
     def get(self, asset_key: str):
+        # Return asset path for a given key
         return pl.Path(f"assets/{self._inventory.get(asset_key)}")
 
     def get_path(self, path: str):
